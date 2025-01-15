@@ -27,6 +27,9 @@ export const markdownToHtml = (markdown: string) => {
     );
 
     let html = processedMarkdown
+        // Horizontal Rule (before headers to avoid confusion)
+        .replace(/^---+$/gm, '<hr />')
+
         // Headers (h1 through h5)
         .replace(/^##### (.*$)/gm, '<h5>$1</h5>')
         .replace(/^#### (.*$)/gm, '<h4>$1</h4>')
