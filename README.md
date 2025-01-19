@@ -46,6 +46,7 @@ A Chrome extension that helps analyze and discuss content from any webpage or Yo
 - Chrome browser
 - [Ollama](https://ollama.ai/) running locally or on a remote server
 - An AI model pulled into Ollama (e.g., mistral, llama2, etc.)
+- Deepseek 3rd party - https://platform.deepseek.com/
 
 ## Installation
 
