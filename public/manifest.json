@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "GopherLogic",
+    "name": "Gnomly",
     "version": "1.0",
     "description": "Extract and analyze content from any webpage or YouTube video using AI.",
     "permissions": [
@@ -25,7 +25,7 @@
             "48": "icons/icon48.png",
             "128": "icons/icon128.png"
         },
-        "default_title": "GopherLogic"
+        "default_title": "Gnomly"
     },
     "side_panel": {
         "default_path": "index.html"
