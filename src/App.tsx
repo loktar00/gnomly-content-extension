@@ -1,4 +1,5 @@
 import { Route, Switch, Link } from "wouter";
+import { IoNewspaperOutline, IoSettingsOutline  } from "react-icons/io5";
 import { Home } from "./views/Home/Home.tsx";
 import { Settings } from "./views/Settings";
 import { PromptManager } from "./views/PromptManager/PromptManager";
@@ -13,10 +14,10 @@ export const App = () =>  (
                 </h1>
                 <div className="header-buttons">
                     <Link to="/prompt-manager">
-                        <button id="manage-prompts" className="settings-btn" title="Manage Prompts">📝</button>
+                        <button id="manage-prompts" className="settings-btn" title="Manage Prompts"><IoNewspaperOutline size={24} /></button>
                     </Link>
                     <Link to="/settings">
-                        <button id="open-options" className="settings-btn" title="Settings">⚙️</button>
+                        <button id="open-options" className="settings-btn" title="Settings"><IoSettingsOutline size={24} /></button>
                     </Link>
                 </div>
             </header>

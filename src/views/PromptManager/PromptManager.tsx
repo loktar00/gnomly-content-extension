@@ -4,6 +4,7 @@ import { PromptItem } from "./PromptItem";
 import { usePromptManagerStore } from "@/stores/SavedPrompts";
 import { getCurrentUrl } from "@/utils/url";
 import { PathSelector } from "@/components/PathSelector";
+import { BackButton } from "@/components/BackButton";
 
 export const PromptManager = () => {
 
@@ -51,7 +52,7 @@ export const PromptManager = () => {
     return (
         <div className="prompt-manager">
             <Link to="/">
-                <button id="back-button" className="btn back-btn">← Back</button>
+                <BackButton />
             </Link>
             <div className="prompt-form">
                 <div className="prompt-manager-input-group">

@@ -10,6 +10,7 @@ import { ModelLabel } from '@/components/ModelLabel';
 import { Loader } from '@/components/Loader';
 import { TokenDisplay } from './TokenDisplay';
 import { useSettings } from '@/hooks/useSettings';
+import { BackButton } from '@/components/BackButton';
 
 export const Summary = () => {
     const { content, prompt, enableChunking } = useSummaryStore();
@@ -232,7 +233,7 @@ export const Summary = () => {
                             <Loader />
                             <TokenDisplay tokenCount={Number(tokenCount)} max={Number(settings?.num_ctx)} />
                             <div className="button-group loading-controls">
-                                <Link href="/" onClick={handleBack}><button className="btn">← Back</button></Link>
+                                <BackButton onClick={handleBack} />
                                 <button className="btn" onClick={handleStop}>Stop</button>
                             </div>
                         </div>
@@ -253,7 +254,7 @@ export const Summary = () => {
                             placeholder="Ask a question about the content..." />
                         <TokenDisplay tokenCount={Number(tokenCount)} max={Number(settings?.num_ctx)} />
                         <div className="button-group">
-                            <Link href="/"><button className="btn">← Back</button></Link>
+                            <Link href="/"><BackButton /></Link>
                             <button
                                 id="send-message"
                                 className="btn"
