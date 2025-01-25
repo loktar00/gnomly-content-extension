@@ -1,5 +1,5 @@
 import { memo } from 'react';
-import { markdownToHtml } from '@/utils/chat';
+import { markdownToHtml } from '@/utils/markdown';
 
 interface StreamingMessageProps {
     content: string;
