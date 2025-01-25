@@ -22,8 +22,8 @@ export const PromptItem = ({ pattern, content, isDefault, selector, onEdit }: Pr
             <div className="prompt-actions">
                 <button className="btn" onClick={() => onEdit(pattern)}>Edit</button>
                 <button className="btn" onClick={handleDelete}>Delete</button>
-                <button className="btn" onClick={handleSetDefault}>
-                    {isDefault ? 'Default' : 'Set as Default'}
+                <button className={`btn ${isDefault ? 'selected' : ''}`} onClick={handleSetDefault}>
+                    {isDefault ? 'Default Prompt' : 'Set as Default'}
                 </button>
             </div>
         </div>

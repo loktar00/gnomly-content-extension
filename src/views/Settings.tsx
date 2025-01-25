@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
 import { ModelConfig, modelProviders } from '@/Configs/ModelProviders';
 import { Loader } from '@/components/Loader';
 import { useSettings } from '@/hooks/useSettings';
+import { BackButton } from '@/components/BackButton';
 
 export const Settings = () => {
     const {
@@ -16,6 +17,12 @@ export const Settings = () => {
     } = useSettings();
 
     const [availableModels, setAvailableModels] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (settings && selectedProvider === 'Ollama') {
+            fetchModelsForProvider(getProviderSettings(selectedProvider));
+        }
+    }, [selectedProvider, settings]);
 
     const handleProviderChange = (provider: string) => {
         setSelectedProvider(provider);
@@ -68,15 +75,14 @@ export const Settings = () => {
     return (
         <div className="settings-content">
             <Link href="/">
-                <button id="back-button" className="btn back-btn">← Back</button>
+                <BackButton />
             </Link>
             <div className="settings-form">
                 <div className="form-group">
                     <label>Provider:</label>
                     <select
                         value={selectedProvider}
-                        onChange={(e) => handleProviderChange(e.target.value)}
-                    >
+                        onChange={(e) => handleProviderChange(e.target.value)}>
                         {Object.keys(modelProviders).map(provider => (
                             <option key={provider} value={provider}>
                                 {provider}
@@ -111,17 +117,17 @@ export const Settings = () => {
                         <>
                             <select
                                 value={settings?.model}
-                                onChange={(e) => handleConfigChange('model', e.target.value)}
-                            >
-                                <option value="">Select a model...</option>
+                                onChange={(e) => handleConfigChange('model', e.target.value)} >
+                                {availableModels.length === 0 ? <option value="">No models available</option> :
+                                    !settings?.model ? <option value="">Select a model...</option> : null
+                                }
                                 {availableModels.map(model => (
                                     <option key={model} value={model}>{model}</option>
                                 ))}
                             </select>
                             <button
                                 className="btn"
-                                onClick={() => fetchModelsForProvider(getProviderSettings(selectedProvider))}
-                            >
+                                onClick={() => fetchModelsForProvider(getProviderSettings(selectedProvider))}>
                                 Refresh Models
                             </button>
                         </>

@@ -61,7 +61,7 @@ export const PathSelector = ({ onPathSelected }: PathSelectorProps) => {
             className={`btn ${isSelecting ? 'selecting' : ''}`}
             onClick={startSelection}
             disabled={isSelecting}>
-            {isSelecting ? 'Cancel Selection' : 'Select Element'}
+            {isSelecting ? 'Cancel Selection' : 'Select Content'}
         </button>
     );
 };

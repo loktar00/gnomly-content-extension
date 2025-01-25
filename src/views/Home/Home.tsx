@@ -180,20 +180,23 @@ export const Home = () =>  {
                     id="transcript-area"
                     rows={5}
                     cols={50}
-                    placeholder="Content will appear here..."
+                    placeholder="Content to summarize..."
                 />
             </div>
-            <div className="button-group source-buttons">
-                <PathSelector onPathSelected={handlePathSelected} />
-                <button id="fetch-webpage" className="btn" onClick={handleFetchWebpage}>
-                    Get Page Content
-                </button>
-                <button id="fetch-current-transcript" className="btn" onClick={handleFetchTranscript}>
-                    Get Transcript
-                </button>
-                <button id="copy-to-clipboard" className="btn" onClick={handleCopyToClipboard}>
-                    Copy to Clipboard
-                </button>
+            <div className="form-group">
+                <label>Manual Actions</label>
+                <div className="button-group source-buttons">
+                    <PathSelector onPathSelected={handlePathSelected} />
+                    <button id="fetch-webpage" className="btn" onClick={handleFetchWebpage}>
+                        Get Page Content
+                    </button>
+                    <button id="fetch-current-transcript" className="btn" onClick={handleFetchTranscript}>
+                        Get Transcript
+                    </button>
+                    <button id="copy-to-clipboard" className="btn" onClick={handleCopyToClipboard}>
+                        Copy to Clipboard
+                    </button>
+                </div>
             </div>
         </>
     );

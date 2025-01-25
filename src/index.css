@@ -197,7 +197,10 @@ h3 {
 
 /* Button Styles */
 .btn {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-weight: var(--font-weight-semibold);
   font-size: var(--font-size-sm);
@@ -214,8 +217,13 @@ select:hover,
 .btn:hover {
   background-color: transparent;
   box-shadow: 0 0 10px var(--button-color),
-              0 0 20px var(--button-color),
-              inset 0 0 15px rgb(255 0 122 / 30%);
+              0 0 10px var(--button-color);
+}
+
+.btn.selected {
+  background-color: var(--button-color);
+  color: var(--button-text-color);
+  pointer-events: none;
 }
 
 .settings-btn {
@@ -227,10 +235,13 @@ select:hover,
   color: var(--header-text-color);
   transition: all var(--transition-speed);
 }
+.settings-btn svg {
+  transition: all var(--transition-speed);
+}
 
-.settings-btn:hover {
-  text-shadow: 0 0 10px var(--header-text-color),
-               0 0 20px var(--header-text-color);
+.settings-btn:hover svg {
+  stroke: var(--primary-color);
+  fill: var(--secondary-color);
 }
 
 .ai-btn {
@@ -644,12 +655,13 @@ hr {
 
 .prompt-actions {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
   justify-content: flex-end;
+  margin-top: var(--spacing-md);
 }
 
-.prompt-actions button {
-  padding: var(--spacing-sm);
+.prompt-actions .btn {
+  padding: var(--spacing-sm) var(--spacing-md);
   font-size: var(--font-size-sm);
   min-width: 75px;
 }
