@@ -98,10 +98,10 @@ export const Summary = () => {
             // Add completed response to messages
             setMessages(prev => {
                 const updatedMessages: Message[] = [...prev, { role: 'assistant', content: response }];
-                // setTokenCount(updateTokenCount(updatedMessages));
-                setTimeout(() => scrollToBottom(), 100); // Force scroll after AI response with slight delay
+                setTokenCount(updateTokenCount(updatedMessages));
                 return updatedMessages;
             });
+
             setStreamingMessage('');
 
         } catch (error) {
