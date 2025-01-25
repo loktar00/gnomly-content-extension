@@ -8,6 +8,12 @@ export const PathSelector = ({ onPathSelected }: PathSelectorProps) => {
     const [isSelecting, setIsSelecting] = useState(false);
 
     const startSelection = useCallback(async () => {
+        // Cancel the selection if we click again without selecting an element
+        if (isSelecting) {
+            setIsSelecting(false);
+            return;
+        }
+
         try {
             setIsSelecting(true);
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -55,7 +61,7 @@ export const PathSelector = ({ onPathSelected }: PathSelectorProps) => {
             className={`btn ${isSelecting ? 'selecting' : ''}`}
             onClick={startSelection}
             disabled={isSelecting}>
-            {isSelecting ? 'Selecting...' : 'Select Element'}
+            {isSelecting ? 'Cancel Selection' : 'Select Element'}
         </button>
     );
 };

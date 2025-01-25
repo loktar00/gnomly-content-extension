@@ -107,9 +107,15 @@ export const Home = () =>  {
     };
 
     const handlePathSelected = async (selector: string) => {
+        // Set the selected path to the selector
+        setSelectedPath(selector);
+
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (!tab.id) return;
+
+            if (!tab.id) {
+                return;
+            }
 
             // Get the text content using the selector
             const [{ result }] = await chrome.scripting.executeScript({
