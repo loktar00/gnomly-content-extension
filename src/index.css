@@ -301,7 +301,6 @@ select:hover,
 
 .chat-input-container {
   gap: var(--spacing-md);
-  transform-origin: bottom center;
   border: 2px solid var(--border-color);
   border-radius: var(--border-radius);
   padding: var(--spacing-md);
@@ -336,8 +335,7 @@ select:hover,
   gap: var(--spacing-md);
 }
 
-.message,
-.chat-input-container:not(.hidden) {
+.message {
   animation: message-pop-in 0.25s ease-out forwards;
   opacity: 0;
 }
