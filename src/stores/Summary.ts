@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { storage } from '@/utils/storage';
+import { toast } from 'react-toastify';
 
 interface SummaryState {
     content: string;
@@ -24,7 +25,7 @@ export const useSummaryStore = create<SummaryState>((set) => ({
             await storage.sync.set({ enableChunking: enabled });
             set({ enableChunking: enabled });
         } catch (error) {
-            console.error('Error saving chunk setting:', error);
+            toast.error(`Error saving chunk setting: ${error}`);
             // Revert state if save fails
             set((state) => ({ enableChunking: !state.enableChunking }));
         }
@@ -35,7 +36,7 @@ export const useSummaryStore = create<SummaryState>((set) => ({
             const result = await storage.sync.get('enableChunking');
             set({ enableChunking: result.enableChunking ?? false });
         } catch (error) {
-            console.error('Error loading chunk setting:', error);
+            toast.error(`Error loading chunk setting: ${error}`);
             set({ enableChunking: false });
         }
     }

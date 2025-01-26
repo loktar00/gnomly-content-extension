@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, KeyboardEvent } from 'react';
 import { Link } from 'wouter';
 import { IoSend, IoStopCircle } from "react-icons/io5";
+import { toast } from 'react-toastify';
 import { handleStreamingResponse, updateTokenCount, estimateTokens, chunkAndSummarize } from '@/utils/chat';
 import { MessageList } from './MessageList';
 import { StreamingMessage } from './StreamingMessage';
@@ -51,7 +52,7 @@ export const Summary = () => {
 
     const handleAIInteraction = async (message: string, isInitial = false) => {
         if (!settings?.provider) {
-            console.error('Settings not available');
+            toast.error('Settings not available');
             return;
         }
 
@@ -67,23 +68,27 @@ export const Summary = () => {
             let newMessages: Message[];
             if (isInitial) {
                 newMessages = [{ role: 'user', content: message }];
-                setMessages(newMessages);
             } else {
                 newMessages = [...messages, { role: 'user', content: message }];
-                setMessages(newMessages);
             }
 
+            setMessages(newMessages);
             setTimeout(() => scrollToBottom(), 100); // Force scroll after adding user message
 
-            // Initial token estimate
-            setTokenCount(updateTokenCount(newMessages));
+            // Initialize token count with current messages before streaming
+            const initialTokenCount = updateTokenCount(newMessages);
+            setTokenCount(initialTokenCount);
+
+            let streamTokens = 0; // Track streaming tokens separately
 
             // Create update handler for streaming response
-            const handleUpdate = (streamContent: string, tokenCount?: number) => {
+            const handleUpdate = (streamContent: string, tokens?: number) => {
                 setStreamingMessage(streamContent);
-                // Only update token count if we get a real count from the API
-                if (tokenCount) {
-                    setTokenCount(tokenCount);
+                if (tokens) {
+                    // Only count the new tokens
+                    const newTokens = tokens - streamTokens;
+                    streamTokens = tokens; // Update running total
+                    setTokenCount(prevTokens => prevTokens + newTokens);
                 }
             };
 
@@ -100,7 +105,7 @@ export const Summary = () => {
             // Add completed response to messages
             setMessages(prev => {
                 const updatedMessages: Message[] = [...prev, { role: 'assistant', content: response }];
-                setTokenCount(updateTokenCount(updatedMessages));
+                // Don't recount tokens that were already counted during streaming
                 return updatedMessages;
             });
 
@@ -144,9 +149,9 @@ export const Summary = () => {
                     const messageFormatTokens = 8;
                     const safetyMargin = 50;
                     const totalOverhead = systemPromptTokens + messageFormatTokens + safetyMargin;
+                    setTokenCount(estimatedTokens + totalOverhead);
 
                     if (estimatedTokens + totalOverhead > currentSettings.num_ctx && enableChunking) {
-                        setTokenCount(estimatedTokens + totalOverhead);
                         setChunkProgress({ current: 0, total: 0, message: 'Analyzing content size...' });
 
                         initialMessage = await chunkAndSummarize(
@@ -203,8 +208,13 @@ export const Summary = () => {
         }
     };
 
-    if (settingsLoading) return <Loader />;
-    if (settingsError) return <div className="error-text">{settingsError}</div>;
+    if (settingsLoading) {
+        return <Loader />;
+    }
+
+    if (settingsError) {
+        return <div className="error-text">{settingsError}</div>;
+    }
 
     return (
         <div className="summary-content">
