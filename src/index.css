@@ -39,7 +39,7 @@
   --transition-speed: 0.2s;
   --sidebar-width: 200px;
   --container-width: 300px;
-  --chat-max-height: 65vh;
+  --chat-max-height: calc(100vh - 80px - 120px - 170px);
 }
 
 /* Base Styles */
@@ -103,34 +103,34 @@ select:disabled {
 }
 
 /* Update scrollbar for dark theme */
-textarea::-webkit-scrollbar,
-.chat-messages::-webkit-scrollbar {
+.scrollable::-webkit-scrollbar{
   width: 8px;
 }
 
-textarea::-webkit-scrollbar-track,
-.chat-messages::-webkit-scrollbar-track {
+.scrollable::-webkit-scrollbar-track {
   background: var(--background-color);
 }
 
-textarea::-webkit-scrollbar-thumb,
-.chat-messages::-webkit-scrollbar-thumb {
+.scrollable::-webkit-scrollbar-thumb {
   background: var(--primary-color);
   border-radius: 4px;
 }
 
-textarea::-webkit-scrollbar-thumb:hover,
-.chat-messages::-webkit-scrollbar-thumb:hover {
+.scrollable::-webkit-scrollbar-thumb:hover {
   background: var(--button-color);
 }
 
 a {
   text-decoration: none;
+  width: max-content;
 }
 
 /* Layout Components */
 .main-content {
   margin-top: var(--spacing-md);
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .panel-content {
@@ -247,6 +247,7 @@ select:hover,
 .ai-btn {
   width: 70%;
   border-color: var(--ai-accent-color);
+  font-size: var(--font-size-lg);
 }
 
 .ai-btn:hover {
@@ -292,26 +293,47 @@ select:hover,
 }
 
 /* Apply animation to both messages and chat input container */
-.chat-input-container {
+.chat-input-container:not(.hidden) {
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
   gap: var(--spacing-md);
-  margin-top: var(--spacing-md);
+}
+
+.chat-input-container {
+  gap: var(--spacing-md);
   transform-origin: bottom center;
+  border: 2px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-md);
+  overflow:auto;
+  min-height: 100px;
+  max-width: 800px;
+  width: 98%;
+  margin: var(--spacing-md) auto 0 auto;
 }
 
 .chat-input-container textarea {
-  flex-grow: 1;
   margin: 0;
-  resize: vertical;
-  max-height: 6vh;
+  resize: none;
+  height: 100%;
+  min-height: 30px;
+  outline: none;
+  overflow: auto;
+  border: none;
 }
 
-.chat-input-container .btn {
-  width: auto;
-  margin: 0;
-  align-self: flex-end;
+.chat-input-container textarea:focus {
+  border-color: none;
+  box-shadow: none;
+  outline: none;
+}
+
+.chat-input-container .controls,
+.controls-send {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-md);
 }
 
 .message,
@@ -328,6 +350,12 @@ select:hover,
   line-height: 1.6;
   transform-origin: center left;
   word-break: break-word;
+  max-width: 800px;
+}
+
+.inner-message {
+  margin: 0 auto;
+  max-width: 800px;
 }
 
 .user-message {
@@ -485,9 +513,11 @@ hr {
 
 .chat-loading:not(.hidden) {
   display: block;
+  max-width: 800px;
+  width: 98%;
+  margin: 0 auto;
 }
 
-.chat-input-container:not(.hidden),
 .chat-container:not(.hidden) {
   display: flex;
 }
@@ -502,10 +532,6 @@ hr {
 
 .side-panel-container .panel-content {
   flex: 1;
-}
-
-.side-panel-container textarea {
-  resize: vertical;
 }
 
 /* Loader - https://codepen.io/elfedeb/pen/aKwjXz */
@@ -607,6 +633,8 @@ hr {
 .prompt-manager,
 .settings-content {
   width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
@@ -700,7 +728,6 @@ select option {
 .settings-form {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
   width: 100%;
   margin: 0 auto;
 }
@@ -711,6 +738,7 @@ select option {
   flex-direction: column;
   gap: var(--spacing-sm);
   width: 100%;
+  margin: var(--spacing-lg) 0;
 }
 
 .form-group--center {

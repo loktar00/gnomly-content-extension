@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
+import { toast } from 'react-toastify';
 import { ModelConfig, modelProviders } from '@/Configs/ModelProviders';
 import { Loader } from '@/components/Loader';
 import { useSettings } from '@/hooks/useSettings';
@@ -62,7 +63,7 @@ export const Settings = () => {
     const handleSave = async () => {
         const currentConfig = getProviderSettings(selectedProvider);
         await saveSettings(selectedProvider, currentConfig);
-        alert('Settings saved successfully!');
+        toast.success('Settings saved successfully!');
     };
 
     if (settingsLoading) {

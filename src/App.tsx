@@ -1,5 +1,6 @@
 import { Route, Switch, Link } from "wouter";
 import { IoNewspaperOutline, IoSettingsOutline  } from "react-icons/io5";
+import { ToastContainer } from 'react-toastify';
 import { Home } from "./views/Home/Home.tsx";
 import { Settings } from "./views/Settings";
 import { PromptManager } from "./views/PromptManager/PromptManager";
@@ -9,9 +10,11 @@ export const App = () =>  (
     <body>
         <div className="side-panel-container">
             <header>
-                <h1 className="title">
-                    <img src="/icons/icon64.png" alt="Gnomly" /> Gnomly
-                </h1>
+                <Link href="/">
+                    <h1 className="title">
+                        <img src="/icons/icon64.png" alt="Gnomly" /> Gnomly
+                    </h1>
+                </Link>
                 <div className="header-buttons">
                     <Link to="/prompt-manager">
                         <button id="manage-prompts" className="settings-btn" title="Manage Prompts"><IoNewspaperOutline size={24} /></button>
@@ -41,5 +44,6 @@ export const App = () =>  (
                 </Switch>
             </div>
         </div>
+        <ToastContainer theme="dark" />
     </body>
 );
