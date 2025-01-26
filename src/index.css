@@ -39,7 +39,7 @@
   --transition-speed: 0.2s;
   --sidebar-width: 200px;
   --container-width: 300px;
-  --chat-max-height: calc(100vh - 80px - 120px - 200px);
+  --chat-max-height: calc(100vh - 410px);
 }
 
 /* Base Styles */
