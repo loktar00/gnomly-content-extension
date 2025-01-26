@@ -351,6 +351,16 @@ select:hover,
   max-width: 800px;
 }
 
+.message-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-md);
+}
+
+.message-controls svg {
+  cursor: pointer;
+}
+
 .inner-message {
   margin: 0 auto;
   max-width: 800px;
