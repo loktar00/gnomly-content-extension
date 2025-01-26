@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, KeyboardEvent } from 'react';
 import { Link } from 'wouter';
-import { IoSend } from "react-icons/io5";
+import { IoSend, IoStopCircle } from "react-icons/io5";
 import { handleStreamingResponse, updateTokenCount, estimateTokens, chunkAndSummarize } from '@/utils/chat';
 import { MessageList } from './MessageList';
 import { StreamingMessage } from './StreamingMessage';
@@ -237,7 +237,9 @@ export const Summary = () => {
                             <TokenDisplay tokenCount={Number(tokenCount)} max={Number(settings?.num_ctx)} />
                             <div className="button-group loading-controls">
                                 <BackButton onClick={handleBack} />
-                                <button className="btn" onClick={handleStop}>Stop</button>
+                                <button className="btn" onClick={handleStop}>
+                                    <IoStopCircle size={20} /> Stop
+                                </button>
                             </div>
                         </div>
                     )}

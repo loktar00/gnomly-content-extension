@@ -39,7 +39,7 @@
   --transition-speed: 0.2s;
   --sidebar-width: 200px;
   --container-width: 300px;
-  --chat-max-height: calc(100vh - 80px - 120px - 170px);
+  --chat-max-height: calc(100vh - 80px - 120px - 200px);
 }
 
 /* Base Styles */
@@ -138,7 +138,7 @@ a {
   flex-direction: column;
   align-items: center;
   gap: var(--spacing-lg);
-  padding: var(--spacing-lg);
+  padding: 0 var(--spacing-lg) var(--spacing-lg) var(--spacing-lg);
 }
 
 .summary-content {

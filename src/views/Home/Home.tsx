@@ -2,6 +2,7 @@ import { useState, useRef, ChangeEvent } from "react";
 import { useLocation } from "wouter";
 import { toast } from 'react-toastify';
 import { GiBrainstorm } from "react-icons/gi";
+import { IoLogoYoutube } from "react-icons/io5";
 import { PromptSelector } from "./PromptSelector";
 import { useSummaryStore } from "@/stores/Summary";
 import { getCurrentUrl, getVideoTitle } from "@/utils/url";
@@ -198,6 +199,7 @@ export const Home = () =>  {
                             Get Page Content
                         </button>
                         <button id="fetch-current-transcript" className="btn" onClick={handleFetchTranscript}>
+                            <IoLogoYoutube size={20} />
                             Get Transcript
                         </button>
                         <button id="copy-to-clipboard" className="btn" onClick={handleCopyToClipboard}>
