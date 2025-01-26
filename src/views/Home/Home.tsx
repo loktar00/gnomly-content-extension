@@ -5,13 +5,14 @@ import { GiBrainstorm } from "react-icons/gi";
 import { IoLogoYoutube } from "react-icons/io5";
 import { PromptSelector } from "./PromptSelector";
 import { useSummaryStore } from "@/stores/Summary";
-import { getCurrentUrl, getVideoTitle } from "@/utils/url";
+import { getVideoTitle } from "@/utils/url";
 import { fetchWebpage, getCurrentVideoId, fetchYouTubeTranscript } from "@/utils/content";
 import { ModelLabel } from "@/components/ModelLabel";
 import { PathSelector } from '@/components/PathSelector';
 import { cleanContent } from "@/utils/content";
 import { useSettings } from "@/hooks/useSettings";
 import { Loader } from "@/components/Loader";
+import { requestPagePermissions, checkPagePermissions } from '@/utils/permissions';
 
 export const Home = () =>  {
     const { settings, isLoading, error } = useSettings();
@@ -69,29 +70,48 @@ export const Home = () =>  {
     }
 
     const handleSummarize = async () => {
-        let userContent = transcriptAreaRef.current?.value.trim();
-
-        // Check if we're on YouTube
-        const currentUrl = await getCurrentUrl();
-        const isYouTube = currentUrl?.includes('youtube.com/watch');
-
-        if (!userContent) {
-            if (isYouTube) {
-                await handleFetchTranscript();
-            } else if (selectedPath) {
-                await handlePathSelected(selectedPath);
-            } else {
-                await handleFetchWebpage();
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (!tab.url) {
+                toast.error("Cannot access current page URL");
+                return;
             }
 
-            userContent = transcriptAreaRef.current?.value;
+            let userContent = transcriptAreaRef.current?.value.trim();
+            const isYouTube = tab.url.includes('youtube.com/watch');
+
+            // Check permissions based on whether it's YouTube or not
+            if (!isYouTube) {
+                const hasPermission = await checkPagePermissions(tab.url);
+                if (!hasPermission) {
+                    const granted = await requestPagePermissions(tab.url);
+                    if (!granted) {
+                        toast.error("Permission needed to summarize this page");
+                        return;
+                    }
+                }
+            }
+
+            // Get content if not already present
+            if (!userContent) {
+                if (isYouTube) {
+                    await handleFetchTranscript();
+                } else if (selectedPath) {
+                    await handlePathSelected(selectedPath);
+                } else {
+                    await handleFetchWebpage();
+                }
+                userContent = transcriptAreaRef.current?.value;
+            }
+
+            const pageTitle = await getVideoTitle() || document.title || "Content";
+
+
+            setContent(`${pageTitle}\n${userContent}`);
+            setLocation('/summary');
+        } catch (error) {
+            toast.error('Error accessing page: ' + error);
         }
-
-        const pageTitle = await getVideoTitle() || document.title || "Content";
-
-
-        setContent(`${pageTitle}\n${userContent}`);
-        setLocation('/summary');
     };
 
     const handleCopyToClipboard = async () => {

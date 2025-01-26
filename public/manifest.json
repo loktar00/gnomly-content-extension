@@ -7,16 +7,14 @@
         "activeTab",
         "storage",
         "scripting",
-        "sidePanel",
-        "tabs"
+        "sidePanel"
     ],
     "host_permissions": [
-        "https://www.youtube.com/*",
-        "https://*.youtube.com/*",
         "http://*:11434/*",
         "https://*:11434/*",
         "https://api.deepseek.com/*",
-        "<all_urls>"
+        "https://www.youtube.com/*",
+        "https://*.youtube.com/*"
     ],
     "action": {
         "default_icon": {
