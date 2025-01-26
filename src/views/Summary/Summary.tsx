@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, KeyboardEvent } from 'react';
 import { Link } from 'wouter';
+import { IoSend, IoStopCircle } from "react-icons/io5";
 import { handleStreamingResponse, updateTokenCount, estimateTokens, chunkAndSummarize } from '@/utils/chat';
 import { MessageList } from './MessageList';
 import { StreamingMessage } from './StreamingMessage';
@@ -212,9 +213,11 @@ export const Summary = () => {
                 <div id="chat-container" className="chat-container" role="log" aria-live="polite">
                     <div
                         ref={messagesRef}
-                        className="chat-messages">
-                        <MessageList messages={messages} />
-                        {streamingMessage && <StreamingMessage content={streamingMessage} />}
+                        className="chat-messages scrollable">
+                        <div className="inner-message">
+                            <MessageList messages={messages} />
+                            {streamingMessage && <StreamingMessage content={streamingMessage} />}
+                        </div>
                     </div>
 
                     {chunkProgress && (
@@ -234,7 +237,9 @@ export const Summary = () => {
                             <TokenDisplay tokenCount={Number(tokenCount)} max={Number(settings?.num_ctx)} />
                             <div className="button-group loading-controls">
                                 <BackButton onClick={handleBack} />
-                                <button className="btn" onClick={handleStop}>Stop</button>
+                                <button className="btn" onClick={handleStop}>
+                                    <IoStopCircle size={20} /> Stop
+                                </button>
                             </div>
                         </div>
                     )}
@@ -245,23 +250,26 @@ export const Summary = () => {
                         </div>
                     )}
 
-                    <div className={`chat-input-container ${isLoading ? 'hidden' : ''}`}>
+                    <div className={`chat-input-container ${isLoading ? 'hidden' : ''} scrollable`}>
                         <textarea
+                            autoFocus
                             ref={chatInputRef}
                             id="chat-input"
                             rows={3}
                             onKeyDown={handleKeyDown}
                             placeholder="Ask a question about the content..." />
-                        <TokenDisplay tokenCount={Number(tokenCount)} max={Number(settings?.num_ctx)} />
-                        <div className="button-group">
+                        <div className="controls">
                             <Link href="/"><BackButton /></Link>
-                            <button
-                                id="send-message"
-                                className="btn"
-                                onClick={handleSendMessage}
-                                disabled={isLoading} >
-                                Send
-                            </button>
+                            <div className="controls-send">
+                                <TokenDisplay tokenCount={Number(tokenCount)} max={Number(settings?.num_ctx)} />
+                                <button
+                                    id="send-message"
+                                    className="btn"
+                                    onClick={handleSendMessage}
+                                    disabled={isLoading} >
+                                    <IoSend />
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
