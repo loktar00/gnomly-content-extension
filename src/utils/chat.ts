@@ -68,7 +68,6 @@ export async function handleStreamingResponse(
 
                             // Use Deepseek's token count when available
                             const tokenCount = parsed.usage?.total_tokens;
-                            console.log('tokenCount', tokenCount);
 
                             if (content) {
                                 accumulatedResponse += content;
