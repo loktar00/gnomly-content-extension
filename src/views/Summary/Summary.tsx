@@ -137,41 +137,38 @@ export const Summary = () => {
             try {
                 let initialMessage = `${content}`;
 
-                // Chunking is only supported for Ollama
-                if (currentSettings.provider === 'Ollama') {
-                    if (!currentSettings.num_ctx) {
-                        throw new Error('num_ctx is not set');
-                    }
+                if (!currentSettings.num_ctx) {
+                    throw new Error('num_ctx is not set');
+                }
 
-                    // Use currentSettings instead of settings
-                    const estimatedTokens = estimateTokens(content);
-                    const systemPromptTokens = estimateTokens(prompt);
-                    const messageFormatTokens = 8;
-                    const safetyMargin = 50;
-                    const totalOverhead = systemPromptTokens + messageFormatTokens + safetyMargin;
-                    setTokenCount(estimatedTokens + totalOverhead);
+                // Use currentSettings instead of settings
+                const estimatedTokens = estimateTokens(content);
+                const systemPromptTokens = estimateTokens(prompt);
+                const messageFormatTokens = 8;
+                const safetyMargin = 50;
+                const totalOverhead = systemPromptTokens + messageFormatTokens + safetyMargin;
+                setTokenCount(estimatedTokens + totalOverhead);
 
-                    if (estimatedTokens + totalOverhead > currentSettings.num_ctx && enableChunking) {
-                        setChunkProgress({ current: 0, total: 0, message: 'Analyzing content size...' });
+                if (estimatedTokens + totalOverhead > currentSettings.num_ctx && enableChunking) {
+                    setChunkProgress({ current: 0, total: 0, message: 'Analyzing content size...' });
 
-                        initialMessage = await chunkAndSummarize(
-                            content,
-                            currentSettings.num_ctx,
-                            currentSettings,
-                            prompt,
-                            (progress) => {
-                                setChunkProgress({
-                                    current: progress.currentChunk,
-                                    total: progress.totalChunks,
-                                    message: progress.message
-                                });
-                            },
-                            (streamContent) => {
-                                setStreamingMessage(streamContent);
-                            },
-                            abortControllerRef.current
-                        );
-                    }
+                    initialMessage = await chunkAndSummarize(
+                        content,
+                        currentSettings.num_ctx,
+                        currentSettings,
+                        prompt,
+                        (progress) => {
+                            setChunkProgress({
+                                current: progress.currentChunk,
+                                total: progress.totalChunks,
+                                message: progress.message
+                            });
+                        },
+                        (streamContent) => {
+                            setStreamingMessage(streamContent);
+                        },
+                        abortControllerRef.current
+                    );
                 }
 
                 await handleAIInteraction(`${prompt}\n\n${initialMessage}`, true);
