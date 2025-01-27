@@ -30,6 +30,7 @@ export const modelProviders = {
         "model": "deepseek-chat",
         "api_key": "",
         "temperature": 1.0,
-        "max_tokens": 4000
+        "max_tokens": 4000,
+        "num_ctx": 12000
     }
 }
