@@ -67,6 +67,7 @@ export const Summary = () => {
             // Add user message immediately and update token count
             let newMessages: Message[];
             if (isInitial) {
+                // Show the initial message right away
                 newMessages = [{ role: 'user', content: message }];
             } else {
                 newMessages = [...messages, { role: 'user', content: message }];
@@ -92,23 +93,18 @@ export const Summary = () => {
                 }
             };
 
-            // Get streaming response with conversation history
+            // For initial message, pass empty array as conversation history
             const response = await handleStreamingResponse(
                 currentSettings,
                 message,
                 handleUpdate,
-                newMessages,
+                isInitial ? [] : messages, // Only pass previous messages for non-initial interactions
                 null,
                 abortControllerRef.current
             );
 
-            // Add completed response to messages
-            setMessages(prev => {
-                const updatedMessages: Message[] = [...prev, { role: 'assistant', content: response }];
-                // Don't recount tokens that were already counted during streaming
-                return updatedMessages;
-            });
-
+            // Add just the response to our history since we already added the message
+            setMessages(prev => [...prev, { role: 'assistant', content: response }]);
             setStreamingMessage('');
 
         } catch (error) {
@@ -135,7 +131,7 @@ export const Summary = () => {
             abortControllerRef.current = new AbortController();
 
             try {
-                let initialMessage = `${content}`;
+                let contentToProcess = content; // Start with just the content
 
                 if (!currentSettings.num_ctx) {
                     throw new Error('num_ctx is not set');
@@ -152,7 +148,7 @@ export const Summary = () => {
                 if (estimatedTokens + totalOverhead > currentSettings.num_ctx && enableChunking) {
                     setChunkProgress({ current: 0, total: 0, message: 'Analyzing content size...' });
 
-                    initialMessage = await chunkAndSummarize(
+                    contentToProcess = await chunkAndSummarize(
                         content,
                         currentSettings.num_ctx,
                         currentSettings,
@@ -171,7 +167,8 @@ export const Summary = () => {
                     );
                 }
 
-                await handleAIInteraction(`${prompt}\n\n${initialMessage}`, true);
+                // Send the prompt and content together as one message
+                await handleAIInteraction(`${prompt}\n\n${contentToProcess}`, true);
                 setChunkProgress(null);
             } catch (error: unknown) {
                 if (error instanceof Error && error.name === 'AbortError') {
