@@ -42,36 +42,208 @@ export function parseTranscriptXml(transcriptXml: string) {
         .join(' ');
 }
 
-export async function fetchYouTubeTranscript(videoId: string) {
+interface CaptionTrack {
+    languageCode: string;
+    baseUrl: string;
+}
+
+// Extend window interface for YouTube globals
+declare global {
+    interface Window {
+        ytInitialPlayerResponse?: {
+            captions?: {
+                playerCaptionsTracklistRenderer?: {
+                    captionTracks?: CaptionTrack[];
+                };
+            };
+        };
+        ytInitialData?: Record<string, unknown>;
+    }
+}
+
+export async function fetchYouTubeTranscript() {
     try {
-        const response = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
-            headers: {
-                'Accept-Language': 'en-US',
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        // Get the current video ID from the active tab
+        const videoId = await getCurrentVideoId();
+        if (!videoId) {
+            throw new Error('No YouTube video ID found in current tab');
+        }
+
+        // Get the current YouTube tab
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id) {
+            throw new Error('No active tab found');
+        }
+
+        // Check if we're on a YouTube page
+        if (!tab.url?.includes('youtube.com/watch')) {
+            throw new Error('Please navigate to a YouTube video page');
+        }
+
+        // Inject script to extract transcript data directly from the page
+        const results = await chrome.scripting.executeScript({
+            target: { tabId: tab.id },
+            func: async () => {
+                try {
+                    // Function to extract transcript from page data
+                    function extractTranscriptFromPage() {
+                        // Try to get data from ytInitialPlayerResponse (most common)
+                        if (window.ytInitialPlayerResponse) {
+                            const captions = window.ytInitialPlayerResponse.captions;
+                            if (captions?.playerCaptionsTracklistRenderer?.captionTracks) {
+                                return captions.playerCaptionsTracklistRenderer.captionTracks;
+                            }
+                        }
+
+                        // Try to get from ytInitialData
+                        if (window.ytInitialData) {
+                            const dataStr = JSON.stringify(window.ytInitialData);
+                            const captionMatch = dataStr.match(/"captionTracks":\[(.*?)\]/);
+                            if (captionMatch) {
+                                try {
+                                    return JSON.parse('[' + captionMatch[1] + ']');
+                                } catch {
+                                    // Continue to next method
+                                }
+                            }
+                        }
+
+                        // Try to find in script tags
+                        const scripts = document.getElementsByTagName('script');
+                        for (let i = 0; i < scripts.length; i++) {
+                            const script = scripts[i];
+                            if (script.textContent && script.textContent.includes('captionTracks')) {
+                                const match = script.textContent.match(/"captionTracks":\[(.*?)\]/);
+                                if (match) {
+                                    try {
+                                        return JSON.parse('[' + match[1] + ']');
+                                    } catch {
+                                        continue;
+                                    }
+                                }
+                            }
+                        }
+
+                        return null;
+                    }
+
+                    const captionTracks = extractTranscriptFromPage();
+                    if (!captionTracks || !captionTracks.length) {
+                        return {
+                            success: false,
+                            error: 'No caption tracks found on this page'
+                        };
+                    }
+
+                    // Find English track or use first available
+                    const track = captionTracks.find((t: CaptionTrack) => t.languageCode === 'en') || captionTracks[0];
+
+                    // Extract transcript via DOM interaction
+                    try {
+                        // Find transcript button
+                        const transcriptButton = document.querySelector('[aria-label*="transcript"], [aria-label*="Transcript"], button[aria-label*="Show transcript"]') as HTMLElement;
+
+                        if (!transcriptButton) {
+                            throw new Error('No transcript button found on page');
+                        }
+
+                        // Click the transcript button to open the panel
+                        transcriptButton.click();
+
+                        // Function to wait for transcript content
+                        const waitForTranscript = (): Promise<string> => {
+                            return new Promise((resolve, reject) => {
+                                let attempts = 0;
+                                const maxAttempts = 20; // Wait up to 10 seconds
+
+                                const checkForTranscript = () => {
+                                    attempts++;
+
+                                    // Look for transcript panel elements
+                                    const transcriptPanel = document.querySelector('ytd-transcript-segment-list-renderer, #transcript, [data-target-id="engagement-panel-transcript"]');
+
+                                    if (transcriptPanel) {
+                                        // Try different selectors for transcript segments
+                                        const transcriptSegments =
+                                            transcriptPanel.querySelectorAll('ytd-transcript-segment-renderer') ||
+                                            transcriptPanel.querySelectorAll('[data-segment-start-time]') ||
+                                            transcriptPanel.querySelectorAll('.transcript-segment') ||
+                                            transcriptPanel.querySelectorAll('span');
+
+                                        if (transcriptSegments.length > 0) {
+                                            // Extract text from segments
+                                            const transcriptTexts: string[] = [];
+
+                                            transcriptSegments.forEach((segment) => {
+                                                const textElement = segment.querySelector('yt-formatted-string, .segment-text, span') || segment;
+                                                const text = textElement.textContent?.trim();
+
+                                                if (text && text.length > 0) {
+                                                    transcriptTexts.push(text);
+                                                }
+                                            });
+
+                                            if (transcriptTexts.length > 0) {
+                                                const fullTranscript = transcriptTexts.join(' ');
+                                                resolve(fullTranscript);
+                                                return;
+                                            }
+                                        }
+                                    }
+
+                                    // If not found yet and we haven't reached max attempts, try again
+                                    if (attempts < maxAttempts) {
+                                        setTimeout(checkForTranscript, 500);
+                                    } else {
+                                        reject(new Error('Transcript panel did not load within timeout'));
+                                    }
+                                };
+
+                                // Start checking immediately
+                                checkForTranscript();
+                            });
+                        };
+
+                        const transcriptText = await waitForTranscript();
+
+                        if (transcriptText && transcriptText.length > 0) {
+                            return {
+                                success: true,
+                                transcriptXml: transcriptText,
+                                languageCode: track.languageCode
+                            };
+                        }
+
+                        throw new Error('No transcript text extracted from DOM');
+
+                    } catch (domError) {
+                        return {
+                            success: false,
+                            error: 'Failed to extract transcript from DOM: ' + (domError instanceof Error ? domError.message : String(domError))
+                        };
+                    }
+
+                } catch (error) {
+                    return {
+                        success: false,
+                        error: error instanceof Error ? error.message : 'Unknown error extracting transcript data'
+                    };
+                }
             }
         });
 
-        const html = await response.text();
-        const splitHtml = html.split('"captions":');
+        const result = results[0]?.result;
 
-        if (splitHtml.length <= 1) {
-            throw new Error('No captions found in video');
+        if (!result || !result.success) {
+            throw new Error(result?.error || 'Failed to extract transcript data from page');
         }
 
-        const captionsJson = JSON.parse(
-            splitHtml[1].split(',"videoDetails')[0].replace(/\n/g, '')
-        );
-
-        const captionTracks = captionsJson?.playerCaptionsTracklistRenderer?.captionTracks;
-        if (!captionTracks?.length) {
-            throw new Error('No caption tracks found');
+        if (!result.transcriptXml) {
+            throw new Error('Transcript text is empty or undefined');
         }
 
-        const track = captionTracks.find((t: any) => t.languageCode === 'en') || captionTracks[0];
-        const transcriptResponse = await fetch(track.baseUrl);
-        const transcriptXml = await transcriptResponse.text();
+        return result.transcriptXml;
 
-        return parseTranscriptXml(transcriptXml);
     } catch (error: unknown) {
         console.error('Error fetching transcript:', error);
         throw new Error(`Failed to fetch transcript: ${error instanceof Error ? error.message : 'Unknown error'}`);

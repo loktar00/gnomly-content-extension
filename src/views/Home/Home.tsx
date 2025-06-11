@@ -57,7 +57,7 @@ export const Home = () =>  {
         }
 
         try {
-            const transcript = await fetchYouTubeTranscript(videoId);
+            const transcript = await fetchYouTubeTranscript();
             if (transcript && transcriptAreaRef.current) {
                 transcriptAreaRef.current.value = transcript;
                 setContent(transcript);
