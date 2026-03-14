@@ -291,6 +291,59 @@ export async function chunkAndSummarize(
     return chunkSummaries.join('\n\n');
 }
 
+export async function generateConversationTitle(
+    settings: ModelConfig,
+    firstUserMessage: string,
+    firstAssistantResponse: string
+): Promise<string> {
+    const truncatedUser = firstUserMessage.slice(0, 200);
+    const truncatedAssistant = firstAssistantResponse.slice(0, 200);
+
+    const messages = [
+        { role: 'system', content: CONSTANTS.TITLE_GENERATION_PROMPT },
+        { role: 'user', content: `User: ${truncatedUser}\n\nAssistant: ${truncatedAssistant}` },
+    ];
+
+    if (settings.provider === 'Deepseek') {
+        const response = await fetch(`${settings.url}/chat/completions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${settings.api_key}`,
+            },
+            body: JSON.stringify({
+                model: settings.model,
+                messages,
+                stream: false,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Title generation failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.choices[0]?.message?.content?.trim() || 'Untitled conversation';
+    } else {
+        const response = await fetch(`${settings.url}/api/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                model: settings.model,
+                messages,
+                stream: false,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Title generation failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.message?.content?.trim() || 'Untitled conversation';
+    }
+}
+
 export function formatSize(bytes: number): string {
     if (bytes === 0) {
         return '0 B';

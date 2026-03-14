@@ -1,10 +1,11 @@
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, useEffect, ChangeEvent } from "react";
 import { useLocation } from "wouter";
 import { toast } from 'react-toastify';
 import { GiBrainstorm } from "react-icons/gi";
 import { IoLogoYoutube } from "react-icons/io5";
 import { PromptSelector } from "./PromptSelector";
 import { useSummaryStore } from "@/stores/Summary";
+import { useConversationsStore } from "@/stores/Conversations";
 import { getVideoTitle } from "@/utils/url";
 import { fetchWebpage, getCurrentVideoId, fetchYouTubeTranscript } from "@/utils/content";
 import { ModelLabel } from "@/components/ModelLabel";
@@ -18,9 +19,14 @@ export const Home = () =>  {
     const { settings, isLoading, error } = useSettings();
     const [selectedPromptContent, setSelectedPromptContent] = useState<string>('');
     const [, setLocation] = useLocation();
-    const { setContent, setPrompt, enableChunking, setEnableChunking } = useSummaryStore();
+    const { setContent, setPrompt, setSourceUrl, enableChunking, setEnableChunking } = useSummaryStore();
+    const { clearActiveConversation } = useConversationsStore();
     const [selectedPath, setSelectedPath] = useState<string>('');
     const transcriptAreaRef = useRef<HTMLTextAreaElement>(null);
+
+    useEffect(() => {
+        clearActiveConversation();
+    }, []);
 
     if (isLoading) {
         return <Loader />;
@@ -108,6 +114,7 @@ export const Home = () =>  {
 
 
             setContent(`${pageTitle}\n${userContent}`);
+            setSourceUrl(tab.url);
             setLocation('/summary');
         } catch (error) {
             toast.error('Error accessing page: ' + error);

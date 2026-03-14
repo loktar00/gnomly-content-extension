@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState, KeyboardEvent } from 'react';
 import { Link } from 'wouter';
-import { IoSend, IoStopCircle } from "react-icons/io5";
+import { IoSend, IoStopCircle, IoGlobeOutline, IoLogoYoutube } from "react-icons/io5";
 import { toast } from 'react-toastify';
-import { handleStreamingResponse, updateTokenCount, estimateTokens, chunkAndSummarize } from '@/utils/chat';
+import { handleStreamingResponse, updateTokenCount, estimateTokens, chunkAndSummarize, generateConversationTitle } from '@/utils/chat';
+import { fetchWebpage, getCurrentVideoId, fetchYouTubeTranscript, cleanContent } from '@/utils/content';
+import { PathSelector } from '@/components/PathSelector';
 import { MessageList } from './MessageList';
 import { StreamingMessage } from './StreamingMessage';
 import { Message } from './types';
 import { useSummaryStore } from '@/stores/Summary';
+import { useConversationsStore } from '@/stores/Conversations';
 import { useAutoScroll } from '@/hooks/useAutoScroll';
 import { ModelLabel } from '@/components/ModelLabel';
 import { Loader } from '@/components/Loader';
@@ -15,7 +18,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { BackButton } from '@/components/BackButton';
 
 export const Summary = () => {
-    const { content, prompt, enableChunking } = useSummaryStore();
+    const { content, prompt, enableChunking, sourceUrl } = useSummaryStore();
     const {
         settings,
         isLoading: settingsLoading,
@@ -29,9 +32,18 @@ export const Summary = () => {
     const [streamingMessage, setStreamingMessage] = useState<string>('');
     const chatInputRef = useRef<HTMLTextAreaElement>(null);
     const initializationRef = useRef(false);
+    const titleGeneratedRef = useRef(false);
     const { ref: messagesRef, scrollToBottom } = useAutoScroll([messages, streamingMessage]);
     const [chunkProgress, setChunkProgress] = useState<{ current: number; total: number; message: string } | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
+
+    const {
+        activeConversationId,
+        activeMessages,
+        startNewConversation,
+        addMessage,
+        updateTitle,
+    } = useConversationsStore();
 
     const handleStop = () => {
         if (abortControllerRef.current) {
@@ -41,7 +53,9 @@ export const Summary = () => {
             setStreamingMessage('');
 
             // Add streaming message to messages
-            setMessages(prev => [...prev, { role: 'assistant', content: stoppedByUser }]);
+            const stoppedMessage: Message = { role: 'assistant', content: stoppedByUser };
+            setMessages(prev => [...prev, stoppedMessage]);
+            addMessage(stoppedMessage);
             scrollToBottom();
         }
     };
@@ -66,14 +80,17 @@ export const Summary = () => {
 
             // Add user message immediately and update token count
             let newMessages: Message[];
+            const userMessage: Message = { role: 'user', content: message };
+
             if (isInitial) {
                 // Show the initial message right away
-                newMessages = [{ role: 'user', content: message }];
+                newMessages = [userMessage];
             } else {
-                newMessages = [...messages, { role: 'user', content: message }];
+                newMessages = [...messages, userMessage];
             }
 
             setMessages(newMessages);
+            addMessage(userMessage);
             setTimeout(() => scrollToBottom(), 100); // Force scroll after adding user message
 
             // Initialize token count with current messages before streaming
@@ -104,8 +121,18 @@ export const Summary = () => {
             );
 
             // Add just the response to our history since we already added the message
-            setMessages(prev => [...prev, { role: 'assistant', content: response }]);
+            const assistantMessage: Message = { role: 'assistant', content: response };
+            setMessages(prev => [...prev, assistantMessage]);
+            addMessage(assistantMessage);
             setStreamingMessage('');
+
+            // Generate title after first assistant response
+            if (!titleGeneratedRef.current && isInitial) {
+                titleGeneratedRef.current = true;
+                generateConversationTitle(currentSettings, message, response)
+                    .then(title => updateTitle(title))
+                    .catch(() => {}); // keep fallback title
+            }
 
         } catch (error) {
             if (error instanceof Error && error.name === 'AbortError') {
@@ -126,9 +153,27 @@ export const Summary = () => {
                 return;
             }
 
-            const currentSettings = getProviderSettings(settings.provider);
             initializationRef.current = true;
+
+            // RESUME: if there's an active conversation with messages, restore them
+            if (activeConversationId && activeMessages.length > 0) {
+                setMessages(activeMessages);
+                titleGeneratedRef.current = true;
+                setIsLoading(false);
+                setTimeout(() => scrollToBottom(), 100);
+                return;
+            }
+
+            const currentSettings = getProviderSettings(settings.provider);
             abortControllerRef.current = new AbortController();
+
+            // Start a new conversation
+            startNewConversation(
+                settings.provider,
+                settings.model,
+                prompt,
+                sourceUrl || undefined
+            );
 
             try {
                 let contentToProcess = content; // Start with just the content
@@ -138,14 +183,14 @@ export const Summary = () => {
                 }
 
                 // Use currentSettings instead of settings
-                const estimatedTokens = estimateTokens(content);
+                const estimatedTokensCount = estimateTokens(content);
                 const systemPromptTokens = estimateTokens(prompt);
                 const messageFormatTokens = 8;
                 const safetyMargin = 50;
                 const totalOverhead = systemPromptTokens + messageFormatTokens + safetyMargin;
-                setTokenCount(estimatedTokens + totalOverhead);
+                setTokenCount(estimatedTokensCount + totalOverhead);
 
-                if (estimatedTokens + totalOverhead > currentSettings.num_ctx && enableChunking) {
+                if (estimatedTokensCount + totalOverhead > currentSettings.num_ctx && enableChunking) {
                     setChunkProgress({ current: 0, total: 0, message: 'Analyzing content size...' });
 
                     contentToProcess = await chunkAndSummarize(
@@ -199,6 +244,58 @@ export const Summary = () => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
+        }
+    };
+
+    const insertContent = (text: string) => {
+        if (chatInputRef.current) {
+            chatInputRef.current.value = text;
+            chatInputRef.current.focus();
+        }
+    };
+
+    const handleFetchWebpage = async () => {
+        const content = await fetchWebpage();
+        if (content) {
+            insertContent(content);
+        }
+    };
+
+    const handleFetchTranscript = async () => {
+        const videoId = await getCurrentVideoId();
+        if (!videoId) {
+            toast.error("Could not determine video ID. Please ensure you're on a YouTube video page.");
+            return;
+        }
+        try {
+            const transcript = await fetchYouTubeTranscript();
+            if (transcript) {
+                insertContent(transcript);
+            }
+        } catch (error: unknown) {
+            toast.error(`Error fetching transcript: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
+    };
+
+    const handlePathSelected = async (selector: string) => {
+        try {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (!tab.id) return;
+
+            const [{ result }] = await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                func: (sel: string) => {
+                    const element = document.querySelector(sel);
+                    return element?.textContent?.trim() || '';
+                },
+                args: [selector]
+            });
+
+            if (result) {
+                insertContent(cleanContent(result));
+            }
+        } catch (error) {
+            console.error('Error getting element content:', error);
         }
     };
 
@@ -266,13 +363,23 @@ export const Summary = () => {
                             <Link href="/"><BackButton /></Link>
                             <div className="controls-send">
                                 <TokenDisplay tokenCount={Number(tokenCount)} max={Number(settings?.num_ctx)} />
-                                <button
-                                    id="send-message"
-                                    className="btn"
-                                    onClick={handleSendMessage}
-                                    disabled={isLoading} >
-                                    <IoSend />
-                                </button>
+                                <div className="chat-actions">
+                                    <PathSelector onPathSelected={handlePathSelected} compact />
+                                    <button className="btn icon-btn" onClick={handleFetchWebpage} title="Get Page Content" disabled={isLoading}>
+                                        <IoGlobeOutline size={18} />
+                                    </button>
+                                    <button className="btn icon-btn" onClick={handleFetchTranscript} title="Get Transcript" disabled={isLoading}>
+                                        <IoLogoYoutube size={18} />
+                                    </button>
+                                    <button
+                                        id="send-message"
+                                        className="btn icon-btn"
+                                        onClick={handleSendMessage}
+                                        title="Send Message"
+                                        disabled={isLoading} >
+                                        <IoSend size={18} />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Prompt, getPrompts, savePrompt } from '@/utils/prompts';
-import { storage } from '@/utils/storage';
+import { dbDeletePrompt, dbSetDefaultPrompt } from '@/utils/db';
+import { migratePromptsToIndexedDB } from '@/utils/migration';
 import { CONSTANTS } from '@/constants';
 
 interface PromptManagerState {
@@ -9,8 +10,8 @@ interface PromptManagerState {
     error: string | null;
     initializePrompts: () => Promise<void>;
     addPrompt: (prompt: Prompt) => Promise<void>;
-    deletePrompt: (pattern: string) => Promise<void>;
-    setDefaultPrompt: (pattern: string) => Promise<void>;
+    deletePrompt: (id: string) => Promise<void>;
+    setDefaultPrompt: (id: string) => Promise<void>;
 }
 
 export const usePromptManagerStore = create<PromptManagerState>((set) => ({
@@ -21,6 +22,10 @@ export const usePromptManagerStore = create<PromptManagerState>((set) => ({
     initializePrompts: async () => {
         try {
             set({ isLoading: true, error: null });
+
+            // Migrate from chrome.storage.sync to IndexedDB on first run
+            await migratePromptsToIndexedDB();
+
             let savedPrompts = await getPrompts();
 
             // If no prompts exist, create the default one
@@ -57,12 +62,9 @@ export const usePromptManagerStore = create<PromptManagerState>((set) => ({
         }
     },
 
-    deletePrompt: async (pattern: string) => {
+    deletePrompt: async (id: string) => {
         try {
-            const result = await storage.sync.get('savedPrompts');
-            const savedPrompts = result.savedPrompts || {};
-            delete savedPrompts[pattern];
-            await storage.sync.set({ savedPrompts });
+            await dbDeletePrompt(id);
 
             // Refresh prompts after deletion
             const updatedPrompts = await getPrompts();
@@ -72,24 +74,9 @@ export const usePromptManagerStore = create<PromptManagerState>((set) => ({
         }
     },
 
-    setDefaultPrompt: async (pattern: string) => {
+    setDefaultPrompt: async (id: string) => {
         try {
-            const result = await storage.sync.get('savedPrompts');
-            const savedPrompts = result.savedPrompts || {};
-
-            // Remove default flag from all prompts
-            Object.keys(savedPrompts).forEach(key => {
-                if (savedPrompts[key].isDefault) {
-                    savedPrompts[key].isDefault = false;
-                }
-            });
-
-            // Set new default
-            if (savedPrompts[pattern]) {
-                savedPrompts[pattern].isDefault = true;
-            }
-
-            await storage.sync.set({ savedPrompts });
+            await dbSetDefaultPrompt(id);
 
             // Refresh prompts after updating
             const updatedPrompts = await getPrompts();
