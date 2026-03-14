@@ -160,10 +160,36 @@ export async function fetchYouTubeTranscript() {
                                     attempts++;
 
                                     // Look for transcript panel elements
-                                    const transcriptPanel = document.querySelector('ytd-transcript-segment-list-renderer, #transcript, [data-target-id="engagement-panel-transcript"]');
+                                    const transcriptPanel = document.querySelector(
+                                        'ytd-macro-markers-list-renderer, ' +
+                                        'ytd-transcript-segment-list-renderer, ' +
+                                        '#transcript, ' +
+                                        '[data-target-id="engagement-panel-transcript"]'
+                                    );
 
                                     if (transcriptPanel) {
-                                        // Try different selectors for transcript segments
+                                        // Try new YouTube layout first (transcript-segment-view-model)
+                                        const newSegments = transcriptPanel.querySelectorAll('transcript-segment-view-model');
+
+                                        if (newSegments.length > 0) {
+                                            const transcriptTexts: string[] = [];
+
+                                            newSegments.forEach((segment) => {
+                                                const timestamp = segment.querySelector('.ytwTranscriptSegmentViewModelTimestamp')?.textContent?.trim();
+                                                const text = segment.querySelector('.yt-core-attributed-string')?.textContent?.trim();
+
+                                                if (timestamp && text) {
+                                                    transcriptTexts.push(`${timestamp} - ${text}`);
+                                                }
+                                            });
+
+                                            if (transcriptTexts.length > 0) {
+                                                resolve(transcriptTexts.join('\n'));
+                                                return;
+                                            }
+                                        }
+
+                                        // Fall back to old layout selectors
                                         const transcriptSegments =
                                             transcriptPanel.querySelectorAll('ytd-transcript-segment-renderer') ||
                                             transcriptPanel.querySelectorAll('[data-segment-start-time]') ||
@@ -171,7 +197,6 @@ export async function fetchYouTubeTranscript() {
                                             transcriptPanel.querySelectorAll('span');
 
                                         if (transcriptSegments.length > 0) {
-                                            // Extract text from segments
                                             const transcriptTexts: string[] = [];
 
                                             transcriptSegments.forEach((segment) => {
