@@ -1,10 +1,12 @@
 import { useState, useCallback } from 'react';
+import { IoScanOutline } from "react-icons/io5";
 
 interface PathSelectorProps {
     onPathSelected: (selector: string) => void;
+    compact?: boolean;
 }
 
-export const PathSelector = ({ onPathSelected }: PathSelectorProps) => {
+export const PathSelector = ({ onPathSelected, compact }: PathSelectorProps) => {
     const [isSelecting, setIsSelecting] = useState(false);
 
     const startSelection = useCallback(async () => {
@@ -58,10 +60,14 @@ export const PathSelector = ({ onPathSelected }: PathSelectorProps) => {
 
     return (
         <button
-            className={`btn ${isSelecting ? 'selecting' : ''}`}
+            className={`btn ${isSelecting ? 'selecting' : ''} ${compact ? 'icon-btn' : ''}`}
             onClick={startSelection}
+            title="Select Content"
             disabled={isSelecting}>
-            {isSelecting ? 'Cancel Selection' : 'Select Content'}
+            {compact
+                ? <IoScanOutline size={18} />
+                : isSelecting ? 'Cancel Selection' : 'Select Content'
+            }
         </button>
     );
 };

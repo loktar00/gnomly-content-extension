@@ -1,5 +1,6 @@
 export const CONSTANTS = {
     DEFAULT_SYSTEM_PROMPT: "Please summarize this content, it may be a video transcript or the contents of a webpage. You may receive json, and css please focus on the content of the page. It is very important to remain unbiased. Highlight important parts of the content however keep it relatively short so we're able to get the overall idea of the content, highlight any important areas that need focus. For a top X list always list the items in order.",
+    TITLE_GENERATION_PROMPT: "Generate a short title (5-8 words max) for this conversation. Return ONLY the title, nothing else.",
     API: {
         DEFAULT_AI_URL: "http://localhost:11434",
         DEFAULT_CHUNK_SUMMARY_PROMPT: `

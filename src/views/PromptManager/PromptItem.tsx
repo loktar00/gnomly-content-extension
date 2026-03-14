@@ -3,15 +3,15 @@ import { usePromptManagerStore } from "@/stores/SavedPrompts";
 
 type PromptItemProps = Prompt & { onEdit: (pattern: string) => void };
 
-export const PromptItem = ({ pattern, content, isDefault, selector, onEdit }: PromptItemProps) => {
+export const PromptItem = ({ id, pattern, content, isDefault, selector, onEdit }: PromptItemProps) => {
     const { deletePrompt, setDefaultPrompt } = usePromptManagerStore();
 
     const handleDelete = () => {
-        deletePrompt(pattern);
+        deletePrompt(id);
     };
 
     const handleSetDefault = () => {
-        setDefaultPrompt(pattern);
+        setDefaultPrompt(id);
     };
 
     return (

@@ -1,10 +1,11 @@
 import { Route, Switch, Link } from "wouter";
-import { IoNewspaperOutline, IoSettingsOutline  } from "react-icons/io5";
+import { IoNewspaperOutline, IoSettingsOutline, IoChatbubblesOutline  } from "react-icons/io5";
 import { ToastContainer } from 'react-toastify';
 import { Home } from "./views/Home/Home.tsx";
 import { Settings } from "./views/Settings";
 import { PromptManager } from "./views/PromptManager/PromptManager";
 import { Summary } from "./views/Summary/Summary.tsx";
+import { ConversationsView } from "./views/Home/ConversationsView.tsx";
 
 export const App = () =>  (
     <body>
@@ -16,6 +17,9 @@ export const App = () =>  (
                     </h1>
                 </Link>
                 <div className="header-buttons">
+                    <Link to="/conversations">
+                        <button className="settings-btn" title="Recent Conversations"><IoChatbubblesOutline size={24} /></button>
+                    </Link>
                     <Link to="/prompt-manager">
                         <button id="manage-prompts" className="settings-btn" title="Manage Prompts"><IoNewspaperOutline size={24} /></button>
                     </Link>
@@ -34,6 +38,9 @@ export const App = () =>  (
                     </Route>
                     <Route path="/prompt-manager">
                         <PromptManager />
+                    </Route>
+                    <Route path="/conversations">
+                        <ConversationsView />
                     </Route>
                     <Route path="/summary">
                         <Summary />

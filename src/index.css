@@ -335,6 +335,17 @@ select:hover,
   gap: var(--spacing-md);
 }
 
+.chat-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.icon-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  min-width: unset;
+}
+
 .message {
   animation: message-pop-in 0.25s ease-out forwards;
   opacity: 0;
@@ -791,4 +802,118 @@ select option {
   color: var(--streaming-color);
   margin: var(--spacing-sm) 0;
   text-align: center;
+}
+
+/* Conversations View */
+.conversations-view {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.conversations-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+/* Conversation List */
+.conversation-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.conversation-search {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.conversation-item {
+  background: var(--message-bg-ai);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  color: var(--text-color);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  transition: all var(--transition-speed);
+}
+
+.conversation-item:hover {
+  box-shadow: 0 0 8px var(--ai-accent-color);
+}
+
+.conversation-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.conversation-title {
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conversation-meta {
+  font-size: var(--font-size-xs);
+  color: var(--text-color);
+  opacity: 0.6;
+  margin-top: var(--spacing-xs);
+}
+
+.conversation-delete {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  opacity: 0.4;
+  cursor: pointer;
+  padding: var(--spacing-sm);
+  transition: opacity var(--transition-speed);
+  flex-shrink: 0;
+}
+
+.conversation-delete:hover {
+  opacity: 1;
+  color: var(--secondary-color);
+}
+
+.conversation-list-loading,
+.conversation-list-empty {
+  font-size: var(--font-size-sm);
+  color: var(--text-color);
+  opacity: 0.6;
+  text-align: center;
+  padding: var(--spacing-md);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+}
+
+.pagination .btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  min-width: 32px;
+  font-size: var(--font-size-sm);
+}
+
+.pagination .btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: var(--font-size-sm);
+  color: var(--text-color);
+  opacity: 0.8;
 }
