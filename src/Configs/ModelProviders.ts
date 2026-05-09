@@ -19,7 +19,17 @@ export const modelProviders = {
         "api_endpoint": "/api/chat",
         "model": "llama3.1",
         "temperature": 1.0,
-        "num_ctx": 8000,
+        "num_ctx": 10000,
+        "model_selection": true
+    },
+    "openai": {
+        "provider": "generic",
+        "name": "Generic",
+        "url": "http://localhost:11434",
+        "api_endpoint": "/api/chat",
+        "model": "llama3.1",
+        "temperature": 1.0,
+        "num_ctx": 10000,
         "model_selection": true
     },
     "Deepseek": {
@@ -30,7 +40,8 @@ export const modelProviders = {
         "model": "deepseek-chat",
         "api_key": "",
         "temperature": 1.0,
-        "max_tokens": 4000,
-        "num_ctx": 12000
+        "max_tokens": 20000,
+        "num_ctx": 22000,
+        "model_selection": true
     }
 }

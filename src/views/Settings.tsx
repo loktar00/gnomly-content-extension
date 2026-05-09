@@ -47,16 +47,43 @@ export const Settings = () => {
     };
 
     const fetchModelsForProvider = async (provider: ModelConfig) => {
-        try {
-            const response = await fetch(`${provider.url}/api/tags`);
-            if (!response.ok) throw new Error('Failed to fetch models');
+        if (provider.provider === 'Ollama') {
+            try {
+                const response = await fetch(`${provider.url}/api/tags`);
 
-            const data = await response.json();
-            const modelNames = data.models.map((model: { name: string }) => model.name);
-            setAvailableModels(modelNames);
-        } catch (error) {
-            console.error('Error fetching models:', error);
-            setAvailableModels([]);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch models');
+                }
+
+                const data = await response.json();
+                const modelNames = data.models.map((model: { name: string }) => model.name);
+                setAvailableModels(modelNames);
+            } catch (error) {
+                console.error('Error fetching models:', error);
+                setAvailableModels([]);
+            }
+        } else {
+            try {
+                const response = await fetch(`${provider.url}/models`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${settings?.api_key}`,
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch models');
+                }
+
+                const data = await response.json();
+                console.log(data.data.map((model:unknown) => model));
+                const modelNames = data.data.map((model: { id: string }) => model.id);
+                setAvailableModels(modelNames);
+            } catch (error) {
+                console.error('Error fetching models:', error);
+                setAvailableModels([]);
+            }
         }
     };
 
